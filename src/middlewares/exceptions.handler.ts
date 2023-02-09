@@ -10,18 +10,14 @@ import { NextFunction, Request, Response } from "express";
  * @see https://expressjs.com/en/guide/error-handling.html
  */
 export const ExceptionsHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-    if (res.headersSent) {
+    if (res.headersSent)
         return next(err)
-    }
-
-    if (err.status && err.error) {
+    if (err.status && err.error)
         return res
             .status(err.status)
             .json({
                 error: err.error
             })
-    }
-
     return res
         .status(500)
         .json({
