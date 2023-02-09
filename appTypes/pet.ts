@@ -5,3 +5,10 @@ export interface Pet {
   name: string
   type: PetCategory
 }
+
+export type HumanCategory = 'male | female'
+export interface Human {
+  id: number
+  name : string
+  type : HumanCategory
+}
