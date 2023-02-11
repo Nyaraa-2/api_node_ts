@@ -1,4 +1,4 @@
-import { Pet } from "~~/appTypes/pet";
+import { Pet } from "./appTypes/pet";
 
 export const pets : Pet[] = [
     {id : 1, name : 'Snoopy', type : 'dog'},
