@@ -21,10 +21,6 @@ PetController.get('/:id', async (req: Request, res: Response) => {
 
   const pet = await service.findOne(id)
 
-  if (pet == null) {
-    throw new NotFoundException('Animal introuvable')
-  }
-
   return res
     .status(200)
     .json(pet)
@@ -67,11 +63,11 @@ PetController.delete('/:id', (req: Request, res: Response) => {
 
   if (!Number.isInteger(id)) {
     throw new BadRequestException('ID invalide')
+  } else {
+    return res
+      .status(204)
+      .json(service.delete(id))
   }
-
-  return res
-    .status(204)
-    .json(service.delete(id))
 })
 
 export { PetController }

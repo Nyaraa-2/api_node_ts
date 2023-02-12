@@ -19,6 +19,5 @@ export const PatchPetValidator =
             in: ['params'],
             errorMessage: 'ID is wrong',
             isInt: true,
-            // Sanitizers can go here as well
-        }   
+        }
     })

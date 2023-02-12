@@ -1,4 +1,4 @@
-import { type ApiException } from '~/appTypes/exception'
+import { ApiException } from '~/appTypes/exception'
 
 class Exception implements ApiException {
   constructor(readonly error: any, readonly status: number) { }
@@ -16,8 +16,4 @@ export class BadRequestException extends Exception {
   }
 }
 
-export class DataBaseException extends Exception {
-  constructor(error: any) {
-    super(error, 400)
-  }
-}
+

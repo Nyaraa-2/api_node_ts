@@ -1,49 +1,59 @@
 import { pets } from '../../data'
-import { BadRequestException, DataBaseException, NotFoundException } from '../../utils/exception'
+import { BadRequestException, NotFoundException } from '../../utils/exception'
 import type { Pet } from '../../appTypes/pet'
 import { db } from '~/config'
-
+import { isNil } from 'ramda'
+import dbQuery from '~/utils/dbQuery'
+import message from '~/utils/errorMessage'
 export class PetService {
   pets: Pet[] = pets
   async findAll(): Promise<Pet[]> {
     try {
-      const query = await db.query('SELECT id, name, type FROM public.animal')
+      const query = await db.query(dbQuery.getAll)
       return query.rows
     } catch (error) {
-      throw new DataBaseException(`Erreur lors de l'insertion en base : ${error}`)
+      throw new BadRequestException(` ${error}`)
     }
   }
 
-  async findOne(id: number): Promise<Pet | undefined> {
+  async findOne(id: number): Promise<Pet | null> {
     if (!Number.isInteger(id)) {
-      throw new BadRequestException('ID non valide')
+      throw new BadRequestException(message.invalidId)
     }
-    return this.pets.find(p => p.id === id)
+    const query = await db.query(dbQuery.getById, [`${id}`])
+    return query.rows.length > 0 ? query.rows : new NotFoundException(message.animalNotFound)
   }
 
   async update(petData: Partial<Pet>, id: number): Promise<Pet | undefined> {
-    const index = this.pets.findIndex(pet => pet.id === id)
-    if (index === -1) {
-      throw new NotFoundException('Animal introuvable')
+    const query = await db.query(dbQuery.getById, [`${id}`])
+    if (query.rows.length === 0) {
+      throw new NotFoundException(message.animalNotFound)
     }
-    if (petData.id != null) {
-      delete petData.id
+    const petFind: Pet = query.rows[0];
+    if (!isNil(petFind)) {
+      petFind.name = isNil(petData.name) ? petFind.name : petData.name
+      petFind.type = isNil(petData.type) ? petFind.type : petData.type
+      const { rows } = await db.query(dbQuery.updateById, [petFind.name, petFind.type, `${id}`])
+      return rows;
     }
-    this.pets[index] = { ...this.pets[index], ...petData }
-    return this.pets[index]
   }
 
   async create(petData: Omit<Pet, 'id'>): Promise<Pet> {
     const { name, type } = { ...petData }
     try {
-      const query = await db.query('INSERT INTO public.animal(name, type) VALUES ($1, $2) RETURNING *', [name, type])
+      const query = await db.query(dbQuery.create, [name, type])
       return query.rows
     } catch (error) {
-      throw new DataBaseException(`Erreur lors de l'insertion en base : ${error}`)
+      throw new BadRequestException(`${message.database} ${error}`)
     }
   }
 
-  delete(id: number): void {
-    this.pets = this.pets.filter(pet => pet.id !== id)
+  async delete(id: number): Promise<void> {
+    try {
+      const { rows } = await db.query(dbQuery.getById, [`${id}`])
+      rows.length > 0 ? await db.query(dbQuery.deleteById, [`${id}`]) : new NotFoundException(message.animalNotFound)
+    } catch (error) {
+      throw new BadRequestException(`${message.database} ${error}`)
+    }
   }
 }
